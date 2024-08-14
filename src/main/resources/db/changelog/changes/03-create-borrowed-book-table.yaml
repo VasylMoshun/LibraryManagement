@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: 03-create-borrowed-book-table
+      author: moshun
+      changes:
+        - createTable:
+            tableName: borrowed_book
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: books_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: members_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: borrowed_book
+            baseColumnNames: books_id
+            referencedTableName: books
+            referencedColumnNames: id
+            onDelete: CASCADE
+            constraintName: addForeignKeyConstraint
+            onUpdate: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: borrowed_book
+            baseColumnNames: members_id
+            referencedTableName: members
+            referencedColumnNames: id
+            onDelete: CASCADE
+            constraintName: addForeignKeyConstraint2
+            onUpdate: CASCADE
