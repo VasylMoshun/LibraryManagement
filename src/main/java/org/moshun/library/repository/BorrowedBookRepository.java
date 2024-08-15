@@ -11,6 +11,8 @@ import java.util.List;
 public interface BorrowedBookRepository extends JpaRepository<BorrowedBook, Long> {
     List<Books> countBorrowedBookByMembersId(Long memberId);
 
+    BorrowedBook findByMembersIdAndBooksId(Long memberId, Long bookId);
+
     int countByMembersId(Long memberId);
 
     List<BorrowedBook> findByMembersId(Long memberId);

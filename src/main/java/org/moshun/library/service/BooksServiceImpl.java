@@ -102,6 +102,8 @@ public class BooksServiceImpl implements BooksService {
 
     @Transactional
     public void returnBook(BorrowedBookRequestDto requestDto) {
+        BorrowedBook byMembersIdAndBooksId = borrowedBookRepository
+                .findByMembersIdAndBooksId(requestDto.getMembersId(), requestDto.getBooksId());
         Optional<Books> bookById = booksRepository.findById(requestDto.getBooksId());
         Optional<Members> membersById = membersRepository.findById(requestDto.getMembersId());
 
@@ -109,10 +111,9 @@ public class BooksServiceImpl implements BooksService {
             Books book = bookById.get();
             Members member = membersById.get();
             book.setAmount(book.getAmount() + 1);
-            List<Books> borrowedBookList = member.getBorrowedBookList();
-            borrowedBookList.remove(book);
             booksRepository.save(book);
             membersRepository.save(member);
+            borrowedBookRepository.delete(byMembersIdAndBooksId);
         }
     }
 
