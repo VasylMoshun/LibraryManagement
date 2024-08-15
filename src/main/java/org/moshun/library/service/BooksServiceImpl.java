@@ -91,12 +91,12 @@ public class BooksServiceImpl implements BooksService {
 
         checkBookAmount(bookById.get());
 
-
         BorrowedBook borrowedBook = new BorrowedBook();
         borrowedBook.setBooks(book);
         borrowedBook.setMembers(member);
         book.setAmount(book.getAmount() - 1);
         booksRepository.save(book);
+        borrowedBookRepository.save(borrowedBook);
         return borrowedMapper.toDto(borrowedBook);
     }
 
