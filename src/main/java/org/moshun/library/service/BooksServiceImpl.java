@@ -1,13 +1,12 @@
 package org.moshun.library.service;
 
 import lombok.RequiredArgsConstructor;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-
 import org.moshun.library.dto.BookRequestDto;
 import org.moshun.library.dto.BookResponseDto;
+import org.moshun.library.dto.BorrowedBookRequestDto;
+import org.moshun.library.dto.BorrowedBookResponseDto;
 import org.moshun.library.mapper.BookMapper;
+import org.moshun.library.mapper.BorrowedMapper;
 import org.moshun.library.mapper.MembersMapper;
 import org.moshun.library.model.Books;
 import org.moshun.library.model.BorrowedBook;
@@ -15,9 +14,14 @@ import org.moshun.library.model.Members;
 import org.moshun.library.repository.BooksRepository;
 import org.moshun.library.repository.BorrowedBookRepository;
 import org.moshun.library.repository.MembersRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +31,7 @@ public class BooksServiceImpl implements BooksService {
     private final BorrowedBookRepository borrowedBookRepository;
     private final MembersMapper membersMapper;
     private final MembersRepository membersRepository;
+    private final BorrowedMapper borrowedMapper;
 
     public BookResponseDto createBook(BookRequestDto requestDto) {
         Optional<Books> byTitleAndAuthor = booksRepository.findByTitleAndAuthor(
@@ -50,6 +55,7 @@ public class BooksServiceImpl implements BooksService {
         return booksRepository.findAll().stream().map(bookMapper::toDto).toList();
     }
 
+
     public BookResponseDto updateBook(BookRequestDto requestDto, Long id) {
         Optional<Books> byId = booksRepository.findById(id);
         if (byId.isPresent()) {
@@ -70,37 +76,34 @@ public class BooksServiceImpl implements BooksService {
     @Value("${book.limit}")
     private int borrowLimit;
 
-    public void borrowBook(Long memberId, Long bookId) {
-        Optional<Books> bookById = booksRepository.findById(bookId);
-        Optional<Members> membersById = membersRepository.findById(memberId);
+    public BorrowedBookResponseDto borrowBook(BorrowedBookRequestDto requestDto) {
+        checkBorrowLimit(requestDto.getMembersId());
+
+        Optional<Books> bookById = booksRepository.findById(requestDto.getBooksId());
+        Optional<Members> membersById = membersRepository.findById(requestDto.getMembersId());
 
         if (membersById.isPresent() && bookById.isPresent()) {
-            Books book = bookById.get();
-            Members member = membersById.get();
-
-            if (borrowedBookRepository.countBorrowedBookByMembersId(memberId).size() >= borrowLimit) {
-                throw new IllegalStateException("Member has already borrowed the maximum number of books.");
-            }
-
-            if (book.getAmount() <= 0) {
-                throw new IllegalStateException("No available copies of this book to borrow.");
-            }
-
-            BorrowedBook borrowedBook = new BorrowedBook();
-            borrowedBook.setBooks(book);
-            borrowedBook.setMembers(member);
-            borrowedBookRepository.save(borrowedBook);
-
-            book.setAmount(book.getAmount() - 1);
-            booksRepository.save(book);
-        } else {
-            throw new IllegalArgumentException("Member or Book not found.");
+            checkBookAmount(bookById.get());
         }
+
+        Books book = bookById.get();
+        Members member = membersById.get();
+
+        checkBookAmount(bookById.get());
+
+
+        BorrowedBook borrowedBook = new BorrowedBook();
+        borrowedBook.setBooks(book);
+        borrowedBook.setMembers(member);
+        book.setAmount(book.getAmount() - 1);
+        booksRepository.save(book);
+        return borrowedMapper.toDto(borrowedBook);
     }
 
-    public void returnBook(Long memberId, Long bookId) {
-        Optional<Books> bookById = booksRepository.findById(bookId);
-        Optional<Members> membersById = membersRepository.findById(memberId);
+    @Transactional
+    public void returnBook(BorrowedBookRequestDto requestDto) {
+        Optional<Books> bookById = booksRepository.findById(requestDto.getBooksId());
+        Optional<Members> membersById = membersRepository.findById(requestDto.getMembersId());
 
         if (membersById.isPresent() && bookById.isPresent()) {
             Books book = bookById.get();
@@ -110,6 +113,19 @@ public class BooksServiceImpl implements BooksService {
             borrowedBookList.remove(book);
             booksRepository.save(book);
             membersRepository.save(member);
+        }
+    }
+
+    private void checkBorrowLimit(Long memberId) {
+        if (borrowedBookRepository.countByMembersId(memberId) >= borrowLimit) {
+            throw new IllegalStateException("Member with ID: " + memberId + " exceeded borrow limit");
+        }
+    }
+
+    private void checkBookAmount(Books book) {
+        if (book.getAmount() == 0) {
+            throw new IllegalStateException("No available copies of this book to borrow"
+                    + book.getId());
         }
     }
 }

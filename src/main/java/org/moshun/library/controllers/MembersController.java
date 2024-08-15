@@ -1,9 +1,8 @@
 package org.moshun.library.controllers;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.moshun.library.dto.BookRequestDto;
-import org.moshun.library.dto.BookResponseDto;
 import org.moshun.library.dto.MemberRequestDto;
 import org.moshun.library.dto.MemberResponseDto;
 import org.moshun.library.service.MembersService;
@@ -29,23 +28,27 @@ public class MembersController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
+    @Tag(name = "Get all member")
     public List<MemberResponseDto> getAllMembers(Pageable pageable) {
         return membersService.getAllMembers(pageable);
     }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @Tag(name = "get meber by id")
     public MemberResponseDto getMemberById(@PathVariable Long id) {
         return membersService.getMemberById(id);
     }
 
     @PostMapping
+    @Tag(name = "Create member")
     public MemberResponseDto createMember(@RequestBody @Valid MemberRequestDto requestDto) {
         return membersService.createMember(requestDto);
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @Tag(name = "update member")
     public void updateMember(
             @RequestBody @Valid MemberRequestDto requestDto, @PathVariable Long id) {
         membersService.updateMemberById(id, requestDto);
@@ -53,8 +56,8 @@ public class MembersController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Tag(name = "delete member")
     public void deleteBook(@PathVariable Long id) {
         membersService.deleteMemberById(id);
     }
-
 }
