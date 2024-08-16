@@ -11,6 +11,7 @@ import java.util.List;
 public interface BorrowedBookRepository extends JpaRepository<BorrowedBook, Long> {
     List<Books> countBorrowedBookByMembersId(Long memberId);
 
+
     BorrowedBook findByMembersIdAndBooksId(Long memberId, Long bookId);
 
     int countByMembersId(Long memberId);
@@ -25,6 +26,9 @@ public interface BorrowedBookRepository extends JpaRepository<BorrowedBook, Long
             + "JOIN Books b ON bb.books.id = b.id "
             + "JOIN Members m ON bb.members.id = m.id  WHERE bb.members.name = :memberName")
     List<Books> findBorrowedBookByMembers_Name(String memberName);
+
+    @Query(value = "SELECT bb.books FROM BorrowedBook bb")
+    List<Books> findAllBooks();
 
     int countByBooksId(Long bookId);
 

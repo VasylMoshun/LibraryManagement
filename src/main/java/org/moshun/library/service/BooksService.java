@@ -20,4 +20,8 @@ public interface BooksService {
     BorrowedBookResponseDto borrowBook(BorrowedBookRequestDto requestDto);
 
     void returnBook(BorrowedBookRequestDto requestDto);
+
+    List<BookResponseDto> getAllBorrowedBookByMemberName(Pageable pageable, String name);
+
+    List<BookResponseDto> getAllDistinctBorrowedBooks(Pageable pageable);
 }

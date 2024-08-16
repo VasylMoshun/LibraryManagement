@@ -7,7 +7,6 @@ import org.moshun.library.dto.BorrowedBookRequestDto;
 import org.moshun.library.dto.BorrowedBookResponseDto;
 import org.moshun.library.mapper.BookMapper;
 import org.moshun.library.mapper.BorrowedMapper;
-import org.moshun.library.mapper.MembersMapper;
 import org.moshun.library.model.Books;
 import org.moshun.library.model.BorrowedBook;
 import org.moshun.library.model.Members;
@@ -29,7 +28,6 @@ public class BooksServiceImpl implements BooksService {
     private final BooksRepository booksRepository;
     private final BookMapper bookMapper;
     private final BorrowedBookRepository borrowedBookRepository;
-    private final MembersMapper membersMapper;
     private final MembersRepository membersRepository;
     private final BorrowedMapper borrowedMapper;
 
@@ -115,6 +113,19 @@ public class BooksServiceImpl implements BooksService {
             membersRepository.save(member);
             borrowedBookRepository.delete(byMembersIdAndBooksId);
         }
+    }
+
+    @Override
+    public List<BookResponseDto> getAllBorrowedBookByMemberName(Pageable pageable, String name) {
+        return borrowedBookRepository.findBorrowedBookByMembers_Name(name).stream()
+                .map(bookMapper::toDto).toList();
+    }
+
+    @Override
+    public List<BookResponseDto> getAllDistinctBorrowedBooks(Pageable pageable) {
+        return borrowedBookRepository.findAllBooks().stream()
+                .distinct()
+                .map(bookMapper::toDto).toList();
     }
 
     private void checkBorrowLimit(Long memberId) {
